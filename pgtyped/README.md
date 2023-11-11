@@ -52,6 +52,8 @@ sudo apt autoremove
 node -v
 ```
 
+※nodeがv20だと、`npm init -y`でエラーになったので、v18に落として進めた
+
 ### PostgreSQL のイメージ起動
 
 `docker-compose.yml` で下記を作成。
@@ -93,6 +95,12 @@ psql -h localhost -p 5432 -U postgres
 
 * [Windowsホスト上のVagrantのシンボリックリンクフォルダでyarn installできない問題の解決 \- Qiita](https://qiita.com/maikya_gu/items/8e313dcd50c39f5a4b0b)
 
+`Vagrantfile`に下記を記載。
+
+```
+    vb.customize ["setextradata", :id, "VBoxInternal2/SharedFoldersEnableSymlinksCreate/vagrant", "1"]
+```
+
 管理者権限のPowerShellで下記を実行。
 
 ```
@@ -105,3 +113,53 @@ fsutil behavior set SymlinkEvaluation L2L:1 R2R:1 L2R:1 R2L:1
 fsutil behavior query symlinkevaluation
 ```
 
+※うまく行ったと思っていたが、ローカルポリシーの変更も必要だった。
+
+* [Windows \+ Vagrant\(VirtualBox\)の共有フォルダにシンボリックリンクが作成できなくて困った｜みさき](https://note.com/m_higa/n/n902624a7895a)
+
+### express で簡単なアプリ作る
+
+```
+mkdir app
+cd app
+npm init -y
+npm install express
+```
+
+`app.js` として簡単なアプリをいったん作っておく。
+
+```javascript
+const express = require("express");
+const app = express();
+const port = 3000;
+
+app.get("/", (req, res) => res.send("Hello World!"));
+
+app.get("/users", (req,res) => {
+   const users = [
+     {
+       id: 1,
+       name: "Taro",
+     },
+     {
+       id: 2,
+       name: "Hanako",
+     },
+     ,
+     {
+       id: 3,
+       name: "Kyotaro",
+     },
+   ];
+
+  res.json(users);
+})
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+```
+
+実行。
+
+```
+node app.js
+```
