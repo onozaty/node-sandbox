@@ -117,7 +117,7 @@ fsutil behavior query symlinkevaluation
 
 * [Windows \+ Vagrant\(VirtualBox\)の共有フォルダにシンボリックリンクが作成できなくて困った｜みさき](https://note.com/m_higa/n/n902624a7895a)
 
-### express で簡単なアプリ作る
+## express で簡単なアプリ作る
 
 ```
 mkdir app
@@ -163,3 +163,31 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 ```
 node app.js
 ```
+
+## node-pg-migrate
+
+DBのマイグレーションは node-pg-migrate で行う。
+
+* https://github.com/salsita/node-pg-migrate
+
+`--migration-file-language=sql` はドキュメントに無いが使える。
+
+* https://github.com/salsita/node-pg-migrate/issues/786
+
+```
+npm install node-pg-migrate pg
+```
+
+```
+npx node-pg-migrate create create-users --migration-file-language=sql
+```
+
+SQLファイルに記載。
+
+マイグレーション実行。
+
+```
+export DATABASE_URL=postgres://postgres:example@localhost:5432/postgres
+npx node-pg-migrate up
+```
+
