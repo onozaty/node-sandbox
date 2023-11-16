@@ -4,22 +4,22 @@ const port = 3000;
 
 app.get("/", (req, res) => res.send("Hello World!"));
 
-app.get("/users", (req,res) => {
-   const users = [
-     {
-       id: 1,
-       name: "Taro",
-     },
-     {
-       id: 2,
-       name: "Hanako",
-     },
-     ,
-     {
-       id: 3,
-       name: "Kyotaro",
-     },
-   ];
+app.get("/users", (req, res) => {
+  const users = [
+    {
+      id: 1,
+      name: "Taro",
+    },
+    {
+      id: 2,
+      name: "Hanako",
+    },
+    ,
+    {
+      id: 3,
+      name: "Kyotaro",
+    },
+  ];
 
   res.json(users);
 })
