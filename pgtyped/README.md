@@ -233,11 +233,14 @@ SQLファイルを作る。
 * src\queries\users.sql
 
 ```sql
-/* @name FindAll */
+/* @name SelectAll */
 SELECT * FROM users;
 
-/* @name FindOne */
+/* @name SelectOne */
 SELECT * FROM users WHERE user_id = :userId;
+
+/* @name Insert */
+INSERT INTO users (name, age) VALUES (:name, :age) RETURNING *;
 ```
 
 設定ファイルを`pgtyped-config.json`で作る。
@@ -253,7 +256,7 @@ SELECT * FROM users WHERE user_id = :userId;
   ],
   "srcDir": "./src/",
   "failOnError": false,
-  "camelCaseColumnNames": false,
+  "camelCaseColumnNames": true,
   "db": {
     "dbName": "postgres",
     "user": "postgres",
@@ -272,3 +275,54 @@ Using a pool of 1 threads.
 Processing src/queries/users.sql
 Saved 2 query types from src/queries/users.sql to src/queries/users.queries.ts
 ```
+
+これを使ってコード書く。
+
+```ts
+import express from "express";
+import { Pool } from 'pg';
+import { insert, selectAll, selectOne } from './queries/users.queries';
+
+export const pool = new Pool({
+  host: 'localhost',
+  user: 'postgres',
+  password: 'example',
+  database: 'postgres',
+});
+
+const app = express();
+app.use(express.json());
+const port = 3000;
+
+app.get("/", (_, res) => res.send("Hello World!"));
+
+app.get("/users", async (_, res) => {
+  const client = await pool.connect();
+  const users = await selectAll.run(undefined, client);
+  res.json(users);
+  client.release();
+});
+
+app.post("/users", async (req, res) => {
+  const client = await pool.connect();
+  const [user] = await insert.run(req.body, client);
+  res.json(user);
+  client.release();
+});
+
+app.get("/users/:id", async (req, res) => {
+  const client = await pool.connect();
+  const [user] = await selectOne.run({ userId: parseInt(req.params.id) }, client);
+  res.json(user);
+  client.release();
+});
+
+app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+```
+
+curl でユーザ登録。
+
+```
+curl -H "Content-Type: application/json" -X POST -d "{ \"name\" : \"Taro\",  \"age\" : 20 }" http://localhost:3000/users
+```
+

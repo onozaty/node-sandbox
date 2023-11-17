@@ -6,8 +6,9 @@ export type ISelectAllParams = void;
 
 /** 'SelectAll' return type */
 export interface ISelectAllResult {
-  name: string | null;
-  user_id: number;
+  age: number | null;
+  name: string;
+  userId: number;
 }
 
 /** 'SelectAll' query type */
@@ -34,8 +35,9 @@ export interface ISelectOneParams {
 
 /** 'SelectOne' return type */
 export interface ISelectOneResult {
-  name: string | null;
-  user_id: number;
+  age: number | null;
+  name: string;
+  userId: number;
 }
 
 /** 'SelectOne' query type */
@@ -57,14 +59,15 @@ export const selectOne = new PreparedQuery<ISelectOneParams,ISelectOneResult>(se
 
 /** 'Insert' parameters type */
 export interface IInsertParams {
-  user: {
-    name: string | null | void
-  };
+  age?: number | null | void;
+  name?: string | null | void;
 }
 
 /** 'Insert' return type */
 export interface IInsertResult {
-  user_id: number;
+  age: number | null;
+  name: string;
+  userId: number;
 }
 
 /** 'Insert' query type */
@@ -73,12 +76,12 @@ export interface IInsertQuery {
   result: IInsertResult;
 }
 
-const insertIR: any = {"usedParamSet":{"user":true},"params":[{"name":"user","required":false,"transform":{"type":"pick_tuple","keys":[{"name":"name","required":false}]},"locs":[{"a":32,"b":36}]}],"statement":"INSERT INTO users (name) VALUES :user RETURNING user_id"};
+const insertIR: any = {"usedParamSet":{"name":true,"age":true},"params":[{"name":"name","required":false,"transform":{"type":"scalar"},"locs":[{"a":38,"b":42}]},{"name":"age","required":false,"transform":{"type":"scalar"},"locs":[{"a":45,"b":48}]}],"statement":"INSERT INTO users (name, age) VALUES (:name, :age) RETURNING *"};
 
 /**
  * Query generated from SQL:
  * ```
- * INSERT INTO users (name) VALUES :user RETURNING user_id
+ * INSERT INTO users (name, age) VALUES (:name, :age) RETURNING *
  * ```
  */
 export const insert = new PreparedQuery<IInsertParams,IInsertResult>(insertIR);

@@ -1,7 +1,8 @@
 -- Up Migration
 CREATE TABLE users (
     user_id serial,
-    name text,
+    name text NOT NULL,
+    age integer,
     constraint users_PKC primary key (user_id)
 );
 

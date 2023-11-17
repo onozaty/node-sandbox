@@ -8,7 +8,7 @@
     ],
     "srcDir": "./src/",
     "failOnError": false,
-    "camelCaseColumnNames": false,
+    "camelCaseColumnNames": true,
     "db": {
         "dbName": "postgres",
         "user": "postgres",
