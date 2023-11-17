@@ -124,33 +124,42 @@ mkdir app
 cd app
 npm init -y
 npm install express
+npm install -D typescript @types/node
+npm install -D @types/express
+npm install -D ts-node
 ```
 
-`app.js` として簡単なアプリをいったん作っておく。
+`tsconfig.json`を作成する。
 
-```javascript
-const express = require("express");
+```
+npx tsc --init
+```
+
+`app.ts` として簡単なアプリをいったん作っておく。
+
+```ts
+import express from "express";
 const app = express();
 const port = 3000;
 
-app.get("/", (req, res) => res.send("Hello World!"));
+app.get("/", (_, res) => res.send("Hello World!"));
 
-app.get("/users", (req,res) => {
-   const users = [
-     {
-       id: 1,
-       name: "Taro",
-     },
-     {
-       id: 2,
-       name: "Hanako",
-     },
-     ,
-     {
-       id: 3,
-       name: "Kyotaro",
-     },
-   ];
+app.get("/users", (_, res) => {
+  const users = [
+    {
+      id: 1,
+      name: "Taro",
+    },
+    {
+      id: 2,
+      name: "Hanako",
+    },
+    ,
+    {
+      id: 3,
+      name: "Kyotaro",
+    },
+  ];
 
   res.json(users);
 })
@@ -161,7 +170,7 @@ app.listen(port, () => console.log(`Example app listening on port ${port}!`));
 実行。
 
 ```
-node app.js
+npx ts-node src/app.ts
 ```
 
 ## node-pg-migrate

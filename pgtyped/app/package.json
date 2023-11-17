@@ -18,6 +18,9 @@
   },
   "devDependencies": {
     "@pgtyped/cli": "^2.3.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.9.1",
+    "ts-node": "^10.9.1",
     "typescript": "^5.2.2"
   }
 }
