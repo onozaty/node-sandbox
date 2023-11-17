@@ -184,10 +184,82 @@ npx node-pg-migrate create create-users --migration-file-language=sql
 
 SQLファイルに記載。
 
+設定ファイルは `migration-config.json` で記載。
+
+```json
+{
+    "user": "postgres",
+    "password": "example",
+    "host": "localhost",
+    "port": 5432,
+    "database": "postgres"
+}
+```
+
+config使うためには、configモジュールのインストールが必要。
+
+```
+npm install config
+```
+
 マイグレーション実行。
 
 ```
-export DATABASE_URL=postgres://postgres:example@localhost:5432/postgres
-npx node-pg-migrate up
+npx node-pg-migrate up -f migration-config.json
 ```
 
+## pgtyped
+
+モジュールをインストール。
+
+```
+npm install -D @pgtyped/cli typescript
+```
+
+```
+npm install @pgtyped/runtime 
+```
+
+SQLファイルを作る。
+* src\queries\users.sql
+
+```sql
+/* @name FindAll */
+SELECT * FROM users;
+
+/* @name FindOne */
+SELECT * FROM users WHERE user_id = :userId;
+```
+
+設定ファイルを`pgtyped-config.json`で作る。
+
+```json
+{
+  "transforms": [
+    {
+      "mode": "sql",
+      "include": "**/*.sql",
+      "emitTemplate": "{{dir}}/{{name}}.queries.ts"
+    }
+  ],
+  "srcDir": "./src/",
+  "failOnError": false,
+  "camelCaseColumnNames": false,
+  "db": {
+    "dbName": "postgres",
+    "user": "postgres",
+    "password": "example",
+    "host": "localhost",
+    "port": 5432
+  }
+}
+```
+
+sqlファイルから型を生成。
+
+```
+$ npx pgtyped -c pgtyped-config.json 
+Using a pool of 1 threads.
+Processing src/queries/users.sql
+Saved 2 query types from src/queries/users.sql to src/queries/users.queries.ts
+```

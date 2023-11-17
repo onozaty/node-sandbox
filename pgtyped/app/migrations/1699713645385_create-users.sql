@@ -1,8 +1,8 @@
 -- Up Migration
 CREATE TABLE users (
-    id serial,
+    user_id serial,
     name text,
-    constraint users_PKC primary key (id)
+    constraint users_PKC primary key (user_id)
 );
 
 -- Down Migration
