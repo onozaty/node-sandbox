@@ -11,6 +11,9 @@
 				"[typescript]": {
 					"editor.defaultFormatter": "esbenp.prettier-vscode",
 					"editor.formatOnSave": true
+				},
+				"jest.autoRun": {
+					"watch": false
 				}
 			},
 			"extensions": [
