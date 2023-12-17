@@ -1,15 +1,16 @@
 import { Injectable } from '@nestjs/common';
 import { Cat } from './interfaces/cat.interface';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class CatsService {
-  private readonly cats: Cat[] = [];
+  constructor(private prisma: PrismaService) {}
 
-  create(cat: Cat) {
-    this.cats.push(cat);
+  async create(cat: Cat): Promise<Cat> {
+    return await this.prisma.cat.create({ data: cat });
   }
 
-  findAll(): Cat[] {
-    return this.cats;
+  async findAll(): Promise<Cat[]> {
+    return await this.prisma.cat.findMany();
   }
 }

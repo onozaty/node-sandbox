@@ -13,3 +13,10 @@ TypeScriptのStarter Projectを利用して始める。
 下記から順に見ていく。
 
 * https://docs.nestjs.com/controllers
+
+## Prisma
+
+NestJSでPrisma使う際のドキュメントあり。
+
+* https://docs.nestjs.com/recipes/prisma
+
