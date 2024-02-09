@@ -9,11 +9,16 @@
                 "[typescript]": {
                     "editor.defaultFormatter": "esbenp.prettier-vscode",
                     "editor.formatOnSave": true
+                },
+                "jest.autoRun": {
+                    "watch": false
                 }
             },
             "extensions": [
                 "dbaeumer.vscode-eslint",
-                "esbenp.prettier-vscode"
+                "esbenp.prettier-vscode",
+                "Orta.vscode-jest",
+                "peakchen90.open-html-in-browser"
             ]
         }
     }
