@@ -10,6 +10,10 @@
                     "editor.defaultFormatter": "esbenp.prettier-vscode",
                     "editor.formatOnSave": true
                 },
+                "[prisma]": {
+                    "editor.defaultFormatter": "Prisma.prisma",
+                    "editor.formatOnSave": true
+                },
                 "jest.autoRun": {
                     "watch": false
                 }
@@ -18,7 +22,8 @@
                 "dbaeumer.vscode-eslint",
                 "esbenp.prettier-vscode",
                 "Orta.vscode-jest",
-                "peakchen90.open-html-in-browser"
+                "peakchen90.open-html-in-browser",
+                "Prisma.prisma"
             ]
         }
     }

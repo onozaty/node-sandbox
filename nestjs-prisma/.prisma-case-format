@@ -1,0 +1,1 @@
+default: 'mapTable=snake,plural; mapField=snake;'
