@@ -11,6 +11,7 @@ import { UserDto } from './dto/user.dto';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { UserIdParamDto } from './dto/user-id-param.dto';
 
 @Controller('users')
 export class UsersController {
@@ -27,12 +28,12 @@ export class UsersController {
 
   /**
    * ユーザを取得します。
-   * @param id ユーザID
+   * @param params パラメータ(ユーザID)
    * @returns ユーザ
    */
   @Get(':id')
-  async find(@Param('id') id: number): Promise<UserDto> {
-    return await this.usersService.find(id);
+  async find(@Param() params: UserIdParamDto): Promise<UserDto> {
+    return await this.usersService.find(params.id);
   }
 
   /**
@@ -47,25 +48,25 @@ export class UsersController {
 
   /**
    * ユーザを更新します。
-   * @param id ユーザID
+   * @param params パラメータ(ユーザID)
    * @param updateUserDto 更新ユーザ情報
    * @returns ユーザ
    */
   @Put(':id')
   async update(
-    @Param('id') id: number,
+    @Param() params: UserIdParamDto,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDto> {
-    return await this.usersService.update(id, updateUserDto);
+    return await this.usersService.update(params.id, updateUserDto);
   }
 
   /**
    * ユーザを削除します。
-   * @param id ユーザID
+   * @param params パラメータ(ユーザID)
    * @returns ユーザ
    */
   @Delete(':id')
-  async delete(@Param('id') id: string): Promise<UserDto> {
-    return await this.usersService.delete(Number(id));
+  async delete(@Param() params: UserIdParamDto): Promise<UserDto> {
+    return await this.usersService.delete(Number(params.id));
   }
 }

@@ -1,5 +1,11 @@
 export class UserDto {
   /**
+   * ユーザID
+   * @example 1
+   */
+  userId: number;
+
+  /**
    * メールアドレス
    * @example taro@example.com
    */
