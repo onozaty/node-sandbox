@@ -12,10 +12,11 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
-    "test:debug": "node -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
+    "test": "dotenv -e .env.test -- jest",
+    "test:watch": "dotenv -e .env.test -- jest --watch",
+    "test:cov": "dotenv -e .env.test -- jest --coverage",
+    "test:debug": "dotenv -e .env.test -- node -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
+    "test:db:reset": "dotenv -e .env.test -- prisma migrate reset -f",
     "db:migrate": "npx prisma-case-format --file ./prisma/schema.prisma && npx prisma migrate dev && npx prisma generate"
   },
   "dependencies": {
@@ -41,6 +42,7 @@
     "@types/supertest": "^6.0.2",
     "@typescript-eslint/eslint-plugin": "^6.21.0",
     "@typescript-eslint/parser": "^6.21.0",
+    "dotenv-cli": "^7.3.0",
     "eslint": "^8.56.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.1.3",
