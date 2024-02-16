@@ -15,9 +15,7 @@
                     "editor.defaultFormatter": "Prisma.prisma",
                     "editor.formatOnSave": true
                 },
-                "jest.autoRun": {
-                    "watch": false
-                }
+                "jest.runMode": "on-demand"
             },
             "extensions": [
                 "dbaeumer.vscode-eslint",
