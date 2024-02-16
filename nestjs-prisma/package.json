@@ -17,7 +17,8 @@
     "test:cov": "dotenv -e .env.test -- jest --coverage",
     "test:debug": "dotenv -e .env.test -- node -r tsconfig-paths/register -r ts-node/register node_modules/jest/bin/jest --runInBand",
     "test:db:reset": "dotenv -e .env.test -- prisma migrate reset -f",
-    "db:migrate": "npx prisma-case-format --file ./prisma/schema.prisma && npx prisma migrate dev && npx prisma generate"
+    "db:migrate": "npx prisma-case-format --file ./prisma/schema.prisma && npx prisma migrate dev && npx prisma generate",
+    "db:reset": "prisma migrate reset"
   },
   "dependencies": {
     "@nestjs/common": "^10.3.2",
