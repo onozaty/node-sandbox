@@ -25,8 +25,8 @@ describe('UsersController (e2e)', () => {
     await app.close();
   });
 
-  beforeEach(() => {
-    resetDb(prisma);
+  beforeEach(async () => {
+    await resetDb(prisma);
   });
 
   it('/users (GET)', async () => {
