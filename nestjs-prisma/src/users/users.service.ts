@@ -14,6 +14,10 @@ export class UsersService {
         userId: userId,
       },
     });
+
+    if (user == null) {
+      return null;
+    }
     return new UserDto(user);
   }
 
@@ -30,7 +34,6 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data,
     });
-
     return new UserDto(user);
   }
 

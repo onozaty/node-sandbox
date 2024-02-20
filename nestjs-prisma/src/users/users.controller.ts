@@ -1,8 +1,10 @@
 import {
   Body,
+  ConflictException,
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   Post,
   Put,
@@ -12,6 +14,8 @@ import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
+import { ApiConflictResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 
 @Controller('users')
 export class UsersController {
@@ -32,8 +36,13 @@ export class UsersController {
    * @returns ユーザ
    */
   @Get(':id')
+  @ApiNotFoundResponse({ description: 'ユーザが存在しない場合' })
   async find(@Param() params: UserIdParamDto): Promise<UserDto> {
-    return await this.usersService.find(params.id);
+    const user = await this.usersService.find(params.id);
+    if (user == null) {
+      throw new NotFoundException();
+    }
+    return user;
   }
 
   /**
@@ -42,8 +51,19 @@ export class UsersController {
    * @returns ユーザ
    */
   @Post()
+  @ApiConflictResponse({ description: '同じemailのユーザが既に存在した場合' })
   async create(@Body() createUserDto: CreateUserDto): Promise<UserDto> {
-    return await this.usersService.create(createUserDto);
+    try {
+      return await this.usersService.create(createUserDto);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2002') {
+          throw new ConflictException();
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -57,7 +77,17 @@ export class UsersController {
     @Param() params: UserIdParamDto,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDto> {
-    return await this.usersService.update(params.id, updateUserDto);
+    try {
+      return await this.usersService.update(params.id, updateUserDto);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2025') {
+          throw new NotFoundException();
+        }
+      }
+      throw error;
+    }
   }
 
   /**
@@ -67,6 +97,16 @@ export class UsersController {
    */
   @Delete(':id')
   async delete(@Param() params: UserIdParamDto): Promise<UserDto> {
-    return await this.usersService.delete(Number(params.id));
+    try {
+      return await this.usersService.delete(Number(params.id));
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2025') {
+          throw new NotFoundException();
+        }
+      }
+      throw error;
+    }
   }
 }
