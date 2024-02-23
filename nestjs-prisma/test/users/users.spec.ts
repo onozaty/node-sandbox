@@ -1,10 +1,10 @@
-import * as request from 'supertest';
-import { Test } from '@nestjs/testing';
-import { AppModule } from '../../src/app.module';
 import { HttpStatus, INestApplication } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import * as request from 'supertest';
+import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { resetDb } from '../test-utils';
 import { defineUserFactory, initialize } from '../__generated__/fabbrica';
+import { resetDb } from '../test-utils';
 
 describe('UsersController (e2e)', () => {
   let app: INestApplication;
@@ -136,11 +136,43 @@ describe('UsersController (e2e)', () => {
     });
   });
 
+  it('/users (POST) email指定なし', async () => {
+    // Act
+    const response = await request(app.getHttpServer()).post('/users').send({});
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['email must be an email', 'email should not be empty'],
+      statusCode: 400,
+    });
+  });
+
+  it('/users (POST) emailではない', async () => {
+    // Arrange
+    // メールとしておかしい形式
+    const email = 'xxxxx';
+
+    // Act
+    const response = await request(app.getHttpServer()).post('/users').send({
+      email: email,
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['email must be an email'],
+      statusCode: 400,
+    });
+  });
+
   it('/users/:id (PUT)', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
-    const updateEmail = user2.email + '.updated';
+    const updateEmail = 'updated@example.com';
 
     // Act
     const response = await request(app.getHttpServer())
@@ -166,7 +198,7 @@ describe('UsersController (e2e)', () => {
     // Act
     // 存在しないユーザ
     const response = await request(app.getHttpServer()).put('/users/1').send({
-      email: 'xxxxx',
+      email: 'test@example.com',
     });
 
     // Assert
@@ -174,6 +206,67 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual({
       message: 'Not Found',
       statusCode: 404,
+    });
+  });
+
+  it('/users/:id (PUT) email指定なし', async () => {
+    // Arrange
+    await userFactory.create();
+    const user2 = await userFactory.create();
+    const updateEmail = '';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user2.userId}`)
+      .send({
+        email: updateEmail,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['email must be an email', 'email should not be empty'],
+      statusCode: 400,
+    });
+  });
+
+  it('/users/:id (PUT) emailではない', async () => {
+    // Arrange
+    await userFactory.create();
+    const user2 = await userFactory.create();
+    // メールとしておかしい形式
+    const updateEmail = 'xxxxx';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user2.userId}`)
+      .send({
+        email: updateEmail,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['email must be an email'],
+      statusCode: 400,
+    });
+  });
+
+  it('/users/:id (PUT) idが数値ではない', async () => {
+    // Act
+    // idに数値以外
+    const response = await request(app.getHttpServer()).put(`/users/xx`).send({
+      email: 'a@example.com',
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['id must be a number conforming to the specified constraints'],
+      statusCode: 400,
     });
   });
 
@@ -207,6 +300,20 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual({
       message: 'Not Found',
       statusCode: 404,
+    });
+  });
+
+  it('/users/:id (DELETE) idが数値ではない', async () => {
+    // Act
+    // idに数値以外
+    const response = await request(app.getHttpServer()).delete('/users/x');
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['id must be a number conforming to the specified constraints'],
+      statusCode: 400,
     });
   });
 });
