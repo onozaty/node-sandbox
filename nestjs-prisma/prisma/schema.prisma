@@ -14,10 +14,22 @@ datasource db {
 }
 
 model User {
-  userId    Int      @id @default(autoincrement()) @map("user_id")
-  email     String   @unique
-  createdAt DateTime @default(dbgenerated("statement_timestamp()")) @map("created_at") @db.Timestamptz()
-  updatedAt DateTime @default(dbgenerated("statement_timestamp()")) @updatedAt @map("updated_at") @db.Timestamptz()
+  userId    Int       @id @default(autoincrement()) @map("user_id")
+  email     String    @unique
+  createdAt DateTime  @default(dbgenerated("statement_timestamp()")) @map("created_at") @db.Timestamptz()
+  updatedAt DateTime  @default(dbgenerated("statement_timestamp()")) @updatedAt @map("updated_at") @db.Timestamptz()
+  userAuth  UserAuth?
 
   @@map("users")
+}
+
+model UserAuth {
+  userId         Int      @id @map("user_id")
+  hashedPassword String   @map("hashed_password")
+  createdAt      DateTime @default(dbgenerated("statement_timestamp()")) @map("created_at") @db.Timestamptz()
+  updatedAt      DateTime @default(dbgenerated("statement_timestamp()")) @updatedAt @map("updated_at") @db.Timestamptz()
+
+  user User @relation(fields: [userId], references: [userId])
+
+  @@map("user_auths")
 }

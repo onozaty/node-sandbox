@@ -101,10 +101,12 @@ describe('UsersController (e2e)', () => {
   it('/users (POST)', async () => {
     // Arrange
     const email = 'user@example.com';
+    const password = 'aA1*12345';
 
     // Act
     const response = await request(app.getHttpServer()).post('/users').send({
       email: email,
+      password: password,
     });
 
     // Assert
@@ -115,17 +117,40 @@ describe('UsersController (e2e)', () => {
       updatedAt: expect.anything(),
       createdAt: expect.anything(),
     });
+
+    // DBの登録状態確認
+    const users = await prisma.user.findMany();
+    expect(users).toEqual([
+      {
+        userId: 1,
+        email: email,
+        updatedAt: expect.anything(),
+        createdAt: expect.anything(),
+      },
+    ]);
+
+    const userAuths = await prisma.userAuth.findMany();
+    expect(userAuths).toEqual([
+      {
+        userId: 1,
+        hashedPassword: expect.anything(),
+        updatedAt: expect.anything(),
+        createdAt: expect.anything(),
+      },
+    ]);
   });
 
   it('/users (POST) Conflict', async () => {
     // Arrange
     const email = 'user@example.com';
+    const password = 'aA1*12345';
     await userFactory.create({ email: email });
 
     // Act
     // 既に作成済みのユーザのemailを指定
     const response = await request(app.getHttpServer()).post('/users').send({
       email: email,
+      password: password,
     });
 
     // Assert
@@ -137,8 +162,13 @@ describe('UsersController (e2e)', () => {
   });
 
   it('/users (POST) email指定なし', async () => {
+    // Arrange
+    const password = 'aA1*12345';
+
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({});
+    const response = await request(app.getHttpServer()).post('/users').send({
+      password: password,
+    });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -153,10 +183,12 @@ describe('UsersController (e2e)', () => {
     // Arrange
     // メールとしておかしい形式
     const email = 'xxxxx';
+    const password = 'aA1*12345';
 
     // Act
     const response = await request(app.getHttpServer()).post('/users').send({
       email: email,
+      password: password,
     });
 
     // Assert
@@ -164,6 +196,50 @@ describe('UsersController (e2e)', () => {
     expect(response.body).toEqual({
       error: 'Bad Request',
       message: ['email must be an email'],
+      statusCode: 400,
+    });
+  });
+
+  it('/users (POST) password指定なし', async () => {
+    // Arrange
+    const email = 'user@example.com';
+    const password = '';
+
+    // Act
+    const response = await request(app.getHttpServer()).post('/users').send({
+      email: email,
+      password: password,
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: [
+        'password is not strong enough',
+        'password should not be empty',
+      ],
+      statusCode: 400,
+    });
+  });
+
+  it('/users (POST) passwordの強度が足りない', async () => {
+    // Arrange
+    const email = 'user@example.com';
+    // パスワードで記号無し
+    const password = 'aA1x12345';
+
+    // Act
+    const response = await request(app.getHttpServer()).post('/users').send({
+      email: email,
+      password: password,
+    });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['password is not strong enough'],
       statusCode: 400,
     });
   });
