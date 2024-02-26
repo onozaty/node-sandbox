@@ -38,13 +38,11 @@ export class UsersService {
     const user = await this.prisma.user.create({
       data: {
         email: data.email,
-      },
-    });
-
-    await this.prisma.userAuth.create({
-      data: {
-        userId: user.userId,
-        hashedPassword: hashedPassword,
+        userAuth: {
+          create: {
+            hashedPassword: hashedPassword,
+          },
+        },
       },
     });
 
