@@ -6,32 +6,32 @@ import { PrismaService } from '../../src/prisma/prisma.service';
 import { defineUserFactory, initialize } from '../__generated__/fabbrica';
 import { resetDb } from '../test-utils';
 
-describe('UsersController (e2e)', () => {
-  let app: INestApplication;
-  let prisma: PrismaService;
+let app: INestApplication;
+let prisma: PrismaService;
 
-  const userFactory = defineUserFactory();
+const userFactory = defineUserFactory();
 
-  beforeAll(async () => {
-    const moduleFixture = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+beforeAll(async () => {
+  const moduleFixture = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
 
-    app = moduleFixture.createNestApplication();
-    prisma = app.get<PrismaService>(PrismaService);
-    initialize({ prisma });
-    await app.init();
-  });
+  app = moduleFixture.createNestApplication();
+  prisma = app.get<PrismaService>(PrismaService);
+  initialize({ prisma });
+  await app.init();
+});
 
-  afterAll(async () => {
-    await app.close();
-  });
+afterAll(async () => {
+  await app.close();
+});
 
-  beforeEach(async () => {
-    await resetDb(prisma);
-  });
+beforeEach(async () => {
+  await resetDb(prisma);
+});
 
-  it('/users (GET)', async () => {
+describe('UsersController#findAll', () => {
+  it('複数件', async () => {
     // Arrange
     const user1 = await userFactory.create();
     const user2 = await userFactory.create();
@@ -55,7 +55,7 @@ describe('UsersController (e2e)', () => {
     );
   });
 
-  it('/users (GET) Empty', async () => {
+  it('0件', async () => {
     // Act
     const response = await request(app.getHttpServer()).get('/users');
 
@@ -63,8 +63,10 @@ describe('UsersController (e2e)', () => {
     expect(response.statusCode).toBe(HttpStatus.OK);
     expect(response.body).toEqual([]);
   });
+});
 
-  it('/users/:id (GET)', async () => {
+describe('UsersController#find', () => {
+  it('正常', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
@@ -86,7 +88,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (GET) Not Found', async () => {
+  it('無し', async () => {
     // Act
     const response = await request(app.getHttpServer()).get('/users/1');
 
@@ -97,8 +99,10 @@ describe('UsersController (e2e)', () => {
       statusCode: 404,
     });
   });
+});
 
-  it('/users (POST)', async () => {
+describe('UsersController#create', () => {
+  it('正常', async () => {
     // Arrange
     const email = 'user@example.com';
     const password = 'aA1*12345';
@@ -140,7 +144,7 @@ describe('UsersController (e2e)', () => {
     ]);
   });
 
-  it('/users (POST) Conflict', async () => {
+  it('Conflict', async () => {
     // Arrange
     const email = 'user@example.com';
     const password = 'aA1*12345';
@@ -161,7 +165,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users (POST) email指定なし', async () => {
+  it('Bad Request: email指定なし', async () => {
     // Arrange
     const password = 'aA1*12345';
 
@@ -179,7 +183,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users (POST) emailではない', async () => {
+  it('Bad Request: emailではない', async () => {
     // Arrange
     // メールとしておかしい形式
     const email = 'xxxxx';
@@ -200,7 +204,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users (POST) password指定なし', async () => {
+  it('Bad Request: password指定なし', async () => {
     // Arrange
     const email = 'user@example.com';
     const password = '';
@@ -223,7 +227,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users (POST) passwordの強度が足りない', async () => {
+  it('Bad Request: passwordの強度が足りない', async () => {
     // Arrange
     const email = 'user@example.com';
     // パスワードで記号無し
@@ -243,8 +247,10 @@ describe('UsersController (e2e)', () => {
       statusCode: 400,
     });
   });
+});
 
-  it('/users/:id (PUT)', async () => {
+describe('UsersController#update', () => {
+  it('正常', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
@@ -270,7 +276,7 @@ describe('UsersController (e2e)', () => {
     expect(response.body.updatedAt).not.toEqual(response.body.createdAt);
   });
 
-  it('/users/:id (PUT) Not Found', async () => {
+  it('Not Found', async () => {
     // Act
     // 存在しないユーザ
     const response = await request(app.getHttpServer()).put('/users/1').send({
@@ -285,7 +291,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (PUT) email指定なし', async () => {
+  it('Bad Request: email指定なし', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
@@ -307,7 +313,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (PUT) emailではない', async () => {
+  it('Bad Request: emailではない', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
@@ -330,7 +336,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (PUT) idが数値ではない', async () => {
+  it('Bad Request: idが数値ではない', async () => {
     // Act
     // idに数値以外
     const response = await request(app.getHttpServer()).put(`/users/xx`).send({
@@ -345,8 +351,10 @@ describe('UsersController (e2e)', () => {
       statusCode: 400,
     });
   });
+});
 
-  it('/users/:id (DELETE)', async () => {
+describe('UsersController#delete', () => {
+  it('正常', async () => {
     // Arrange
     await userFactory.create();
     const user2 = await userFactory.create();
@@ -366,7 +374,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (DELETE) Not Found', async () => {
+  it('Not Found', async () => {
     // Act
     // 存在しないユーザ
     const response = await request(app.getHttpServer()).delete('/users/1');
@@ -379,7 +387,7 @@ describe('UsersController (e2e)', () => {
     });
   });
 
-  it('/users/:id (DELETE) idが数値ではない', async () => {
+  it('Bad Request: idが数値ではない', async () => {
     // Act
     // idに数値以外
     const response = await request(app.getHttpServer()).delete('/users/x');

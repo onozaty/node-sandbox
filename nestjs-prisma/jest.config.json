@@ -17,5 +17,6 @@
   ],
   "coverageDirectory": "coverage",
   "testEnvironment": "node",
-  "maxWorkers": 1
+  "maxWorkers": 1,
+  "verbose": true
 }
