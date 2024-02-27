@@ -6,6 +6,8 @@
 * [ ] 認証
 * [x] バリデーション
 * [x] テスト用DBの切り替え、リセット
+* [ ] ログ
+* [ ] Docker Image作成
 
 ## メモ
 
@@ -25,3 +27,7 @@
 * Validation
   * [Validation \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/techniques/validation)
   * [typestack/class\-validator: Decorator\-based property validation for classes\.](https://github.com/typestack/class-validator)
+* 認証
+  * [Authentication \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/security/authentication)
+  * ハッシュ化
+    * [Encryption and Hashing \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/security/encryption-and-hashing)
