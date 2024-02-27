@@ -1,16 +1,13 @@
 import {
   Body,
-  ConflictException,
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   Post,
   Put,
 } from '@nestjs/common';
 import { ApiConflictResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -39,11 +36,7 @@ export class UsersController {
   @Get(':id')
   @ApiNotFoundResponse({ description: 'ユーザが存在しない場合' })
   async find(@Param() params: UserIdParamDto): Promise<UserDto> {
-    const user = await this.usersService.find(params.id);
-    if (user == null) {
-      throw new NotFoundException();
-    }
-    return user;
+    return await this.usersService.find(params.id);
   }
 
   /**
@@ -54,17 +47,7 @@ export class UsersController {
   @Post()
   @ApiConflictResponse({ description: '同じemailのユーザが既に存在した場合' })
   async create(@Body() createUserDto: CreateUserDto): Promise<UserDto> {
-    try {
-      return await this.usersService.create(createUserDto);
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        // https://www.prisma.io/docs/orm/reference/error-reference
-        if (error.code == 'P2002') {
-          throw new ConflictException();
-        }
-      }
-      throw error;
-    }
+    return await this.usersService.create(createUserDto);
   }
 
   /**
@@ -78,17 +61,7 @@ export class UsersController {
     @Param() params: UserIdParamDto,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserDto> {
-    try {
-      return await this.usersService.update(params.id, updateUserDto);
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        // https://www.prisma.io/docs/orm/reference/error-reference
-        if (error.code == 'P2025') {
-          throw new NotFoundException();
-        }
-      }
-      throw error;
-    }
+    return await this.usersService.update(params.id, updateUserDto);
   }
 
   /**
@@ -98,17 +71,7 @@ export class UsersController {
    */
   @Delete(':id')
   async delete(@Param() params: UserIdParamDto): Promise<UserDto> {
-    try {
-      return await this.usersService.delete(Number(params.id));
-    } catch (error) {
-      if (error instanceof PrismaClientKnownRequestError) {
-        // https://www.prisma.io/docs/orm/reference/error-reference
-        if (error.code == 'P2025') {
-          throw new NotFoundException();
-        }
-      }
-      throw error;
-    }
+    return await this.usersService.delete(Number(params.id));
   }
 
   /**

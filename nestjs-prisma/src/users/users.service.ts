@@ -1,8 +1,10 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from './../prisma/prisma.service';
 import { ChangePasswordDto } from './dto/change-password.dto';
@@ -22,7 +24,7 @@ export class UsersService {
     });
 
     if (user == null) {
-      return null;
+      throw new NotFoundException();
     }
     return new UserDto(user);
   }
@@ -40,38 +42,66 @@ export class UsersService {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(data.password, salt);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: data.email,
-        userAuth: {
-          create: {
-            hashedPassword: hashedPassword,
+    try {
+      const user = await this.prisma.user.create({
+        data: {
+          email: data.email,
+          userAuth: {
+            create: {
+              hashedPassword: hashedPassword,
+            },
           },
         },
-      },
-    });
-
-    return new UserDto(user);
+      });
+      return new UserDto(user);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2002') {
+          throw new ConflictException();
+        }
+      }
+      throw error;
+    }
   }
 
   async update(userId: number, data: UpdateUserDto): Promise<UserDto> {
-    const user = await this.prisma.user.update({
-      data,
-      where: {
-        userId: userId,
-      },
-    });
-
-    return new UserDto(user);
+    try {
+      const user = await this.prisma.user.update({
+        data,
+        where: {
+          userId: userId,
+        },
+      });
+      return new UserDto(user);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2025') {
+          throw new NotFoundException();
+        }
+      }
+      throw error;
+    }
   }
 
   async delete(userId: number): Promise<UserDto> {
-    const user = await this.prisma.user.delete({
-      where: {
-        userId: userId,
-      },
-    });
-    return new UserDto(user);
+    try {
+      const user = await this.prisma.user.delete({
+        where: {
+          userId: userId,
+        },
+      });
+      return new UserDto(user);
+    } catch (error) {
+      if (error instanceof PrismaClientKnownRequestError) {
+        // https://www.prisma.io/docs/orm/reference/error-reference
+        if (error.code == 'P2025') {
+          throw new NotFoundException();
+        }
+      }
+      throw error;
+    }
   }
 
   async changePassword(userId: number, data: ChangePasswordDto): Promise<void> {
