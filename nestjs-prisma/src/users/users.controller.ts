@@ -9,13 +9,14 @@ import {
   Post,
   Put,
 } from '@nestjs/common';
-import { UserDto } from './dto/user.dto';
-import { UsersService } from './users.service';
+import { ApiConflictResponse, ApiNotFoundResponse } from '@nestjs/swagger';
+import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { UserIdParamDto } from './dto/user-id-param.dto';
-import { ApiConflictResponse, ApiNotFoundResponse } from '@nestjs/swagger';
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { UserDto } from './dto/user.dto';
+import { UsersService } from './users.service';
 
 @Controller('users')
 export class UsersController {
@@ -108,5 +109,18 @@ export class UsersController {
       }
       throw error;
     }
+  }
+
+  /**
+   * パスワードを変更します。
+   * @param params パラメータ(ユーザID)
+   * @param changePassword 更新ユーザ情報
+   */
+  @Put(':id/password')
+  async changePassword(
+    @Param() params: UserIdParamDto,
+    @Body() changePassword: ChangePasswordDto,
+  ): Promise<void> {
+    await this.usersService.changePassword(params.id, changePassword);
   }
 }

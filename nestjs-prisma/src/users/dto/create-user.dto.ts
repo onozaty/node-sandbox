@@ -22,4 +22,8 @@ export class CreateUserDto {
     minSymbols: 1,
   })
   password: string;
+
+  constructor(partial: Partial<CreateUserDto>) {
+    Object.assign(this, partial);
+  }
 }

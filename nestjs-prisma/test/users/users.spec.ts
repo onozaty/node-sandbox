@@ -3,11 +3,14 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
+import { CreateUserDto } from '../../src/users/dto/create-user.dto';
+import { UsersService } from '../../src/users/users.service';
 import { defineUserFactory, initialize } from '../__generated__/fabbrica';
 import { resetDb } from '../test-utils';
 
 let app: INestApplication;
 let prisma: PrismaService;
+let userService: UsersService;
 
 const userFactory = defineUserFactory();
 
@@ -19,6 +22,7 @@ beforeAll(async () => {
   app = moduleFixture.createNestApplication();
   prisma = app.get<PrismaService>(PrismaService);
   initialize({ prisma });
+  userService = app.get<UsersService>(UsersService);
   await app.init();
 });
 
@@ -391,6 +395,210 @@ describe('UsersController#delete', () => {
     // Act
     // idに数値以外
     const response = await request(app.getHttpServer()).delete('/users/x');
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['id must be a number conforming to the specified constraints'],
+      statusCode: 400,
+    });
+  });
+});
+
+describe('UsersController#changePassword', () => {
+  it('正常', async () => {
+    // Arrange
+    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
+    const oldPassword = 'aA1*12345';
+    const user = await userService.create(
+      new CreateUserDto({
+        email: 'test@exmaple.com',
+        password: oldPassword,
+      }),
+    );
+
+    // パスワード変更前のuserAuthを比較用に保持
+    const oldUserAuth = await prisma.userAuth.findUniqueOrThrow({
+      where: {
+        userId: user.userId,
+      },
+    });
+
+    const newPassword = 'Aa1**********';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user.userId}/password`)
+      .send({
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.OK);
+
+    // userAuthが更新されていることを確認
+    const newUserAuth = await prisma.userAuth.findUniqueOrThrow({
+      where: {
+        userId: user.userId,
+      },
+    });
+
+    expect(newUserAuth.hashedPassword).not.toEqual(oldUserAuth.hashedPassword);
+    expect(newUserAuth.updatedAt).not.toEqual(oldUserAuth.updatedAt);
+    expect(newUserAuth.createdAt).toEqual(oldUserAuth.createdAt);
+  });
+
+  it('Not Found', async () => {
+    // Act
+    // 存在しないユーザ
+    const response = await request(app.getHttpServer())
+      .put(`/users/1/password`)
+      .send({
+        oldPassword: 'aA1*12345',
+        newPassword: 'aA1*12345',
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
+    expect(response.body).toEqual({
+      message: 'Not Found',
+      statusCode: 404,
+    });
+  });
+
+  it('Bad Request: oldPasswordが一致しない', async () => {
+    // Arrange
+    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
+    const oldPassword = 'aA1*12345';
+    const user = await userService.create(
+      new CreateUserDto({
+        email: 'test@exmaple.com',
+        password: oldPassword,
+      }),
+    );
+
+    const newPassword = 'Aa1**********';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user.userId}/password`)
+      .send({
+        oldPassword: oldPassword + 'xxx', // oldPasswordとして間違ったものを指定
+        newPassword: newPassword,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: '旧パスワードが正しくありません。',
+      statusCode: 400,
+    });
+  });
+
+  it('Bad Request: oldPasswordなし', async () => {
+    // Arrange
+    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
+    const oldPassword = 'aA1*12345';
+    const user = await userService.create(
+      new CreateUserDto({
+        email: 'test@exmaple.com',
+        password: oldPassword,
+      }),
+    );
+
+    const newPassword = 'Aa1**********';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user.userId}/password`)
+      .send({
+        oldPassword: '', // oldPasswordが空
+        newPassword: newPassword,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['oldPassword should not be empty'],
+      statusCode: 400,
+    });
+  });
+
+  it('Bad Request: newPasswordなし', async () => {
+    // Arrange
+    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
+    const oldPassword = 'aA1*12345';
+    const user = await userService.create(
+      new CreateUserDto({
+        email: 'test@exmaple.com',
+        password: oldPassword,
+      }),
+    );
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user.userId}/password`)
+      .send({
+        oldPassword: oldPassword,
+        // nedPasswordなし
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: [
+        'newPassword is not strong enough',
+        'newPassword should not be empty',
+      ],
+      statusCode: 400,
+    });
+  });
+
+  it('Bad Request: newPasswordの強度が足りない', async () => {
+    // Arrange
+    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
+    const oldPassword = 'aA1*12345';
+    const user = await userService.create(
+      new CreateUserDto({
+        email: 'test@exmaple.com',
+        password: oldPassword,
+      }),
+    );
+
+    // 半角英字が無い
+    const newPassword = 'A1*1234567';
+
+    // Act
+    const response = await request(app.getHttpServer())
+      .put(`/users/${user.userId}/password`)
+      .send({
+        oldPassword: oldPassword,
+        newPassword: newPassword,
+      });
+
+    // Assert
+    expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
+    expect(response.body).toEqual({
+      error: 'Bad Request',
+      message: ['newPassword is not strong enough'],
+      statusCode: 400,
+    });
+  });
+
+  it('Bad Request: idが数値ではない', async () => {
+    // Act
+    // idに数値以外
+    const response = await request(app.getHttpServer())
+      .put(`/users/xx/password`)
+      .send({
+        oldPassword: 'aA1*12345',
+        newPassword: 'aA1*12345',
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
