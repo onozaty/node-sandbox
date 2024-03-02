@@ -28,5 +28,7 @@
                 "Prisma.prisma"
             ]
         }
-    }
+    },
+    "remoteUser": "node",
+    "updateRemoteUserUID": true
 }
