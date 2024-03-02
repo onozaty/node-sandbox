@@ -493,7 +493,7 @@ describe('UsersController#changePassword', () => {
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
     expect(response.body).toEqual({
       error: 'Bad Request',
-      message: '旧パスワードが正しくありません。',
+      message: 'Invalid password',
       statusCode: 400,
     });
   });

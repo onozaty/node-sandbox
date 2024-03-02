@@ -14,7 +14,7 @@ import { UserDto } from './dto/user.dto';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) {}
 
   async find(userId: number): Promise<UserDto> {
     const user = await this.prisma.user.findUnique({
@@ -39,8 +39,7 @@ export class UsersService {
   }
 
   async create(data: CreateUserDto): Promise<UserDto> {
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(data.password, salt);
+    const hashedPassword = await this.hashingPassword(data.password);
 
     try {
       const user = await this.prisma.user.create({
@@ -105,23 +104,26 @@ export class UsersService {
   }
 
   async changePassword(userId: number, data: ChangePasswordDto): Promise<void> {
-    const user = await this.prisma.user.findUnique({
+    const userAuth = await this.prisma.userAuth.findUnique({
       where: {
         userId: userId,
       },
     });
 
-    if (user == null) {
+    if (userAuth == null) {
       throw new NotFoundException();
     }
 
-    const ok = await this.verifyPassword(userId, data.oldPassword);
+    const ok = await this.verifyPassword(
+      data.oldPassword,
+      userAuth.hashedPassword,
+    );
+
     if (!ok) {
-      throw new BadRequestException('旧パスワードが正しくありません。');
+      throw new BadRequestException('Invalid password');
     }
 
-    const salt = await bcrypt.genSalt();
-    const hashedPassword = await bcrypt.hash(data.newPassword, salt);
+    const hashedPassword = await this.hashingPassword(data.newPassword);
 
     await this.prisma.userAuth.update({
       data: {
@@ -133,17 +135,12 @@ export class UsersService {
     });
   }
 
-  async verifyPassword(userId: number, password: string) {
-    const userAuth = await this.prisma.userAuth.findUnique({
-      where: {
-        userId: userId,
-      },
-    });
+  async verifyPassword(rawPassword: string, hashedPassword: string) {
+    return await bcrypt.compare(rawPassword, hashedPassword);
+  }
 
-    if (userAuth == null) {
-      return false;
-    }
-
-    return await bcrypt.compare(password, userAuth.hashedPassword);
+  async hashingPassword(rawPassword: string) {
+    const salt = await bcrypt.genSalt();
+    return await bcrypt.hash(rawPassword, salt);
   }
 }
