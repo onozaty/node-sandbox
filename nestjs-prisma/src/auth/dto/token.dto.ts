@@ -1,4 +1,4 @@
-export class Token {
+export class TokenDto {
   /**
    * アクセストークン
    * @example xxxxxxx

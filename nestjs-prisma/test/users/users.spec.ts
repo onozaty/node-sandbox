@@ -3,14 +3,12 @@ import { Test } from '@nestjs/testing';
 import * as request from 'supertest';
 import { AppModule } from '../../src/app.module';
 import { PrismaService } from '../../src/prisma/prisma.service';
-import { CreateUserDto } from '../../src/users/dto/create-user.dto';
-import { UsersService } from '../../src/users/users.service';
 import { defineUserFactory, initialize } from '../__generated__/fabbrica';
-import { resetDb } from '../test-utils';
+import { Tester } from '../tester';
 
 let app: INestApplication;
 let prisma: PrismaService;
-let userService: UsersService;
+let tester: Tester;
 
 const userFactory = defineUserFactory();
 
@@ -20,9 +18,10 @@ beforeAll(async () => {
   }).compile();
 
   app = moduleFixture.createNestApplication();
+  tester = new Tester(app);
   prisma = app.get<PrismaService>(PrismaService);
   initialize({ prisma });
-  userService = app.get<UsersService>(UsersService);
+
   await app.init();
 });
 
@@ -31,7 +30,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await resetDb(prisma);
+  await tester.resetDb();
 });
 
 describe('UsersController#findAll', () => {
@@ -122,8 +121,8 @@ describe('UsersController#create', () => {
     expect(response.body).toEqual({
       userId: 1,
       email: email,
-      updatedAt: expect.anything(),
-      createdAt: expect.anything(),
+      updatedAt: expect.any(String),
+      createdAt: expect.any(String),
     });
 
     // DBの登録状態確認
@@ -132,8 +131,8 @@ describe('UsersController#create', () => {
       {
         userId: 1,
         email: email,
-        updatedAt: expect.anything(),
-        createdAt: expect.anything(),
+        updatedAt: expect.any(Date),
+        createdAt: expect.any(Date),
       },
     ]);
 
@@ -141,9 +140,9 @@ describe('UsersController#create', () => {
     expect(userAuths).toEqual([
       {
         userId: 1,
-        hashedPassword: expect.anything(),
-        updatedAt: expect.anything(),
-        createdAt: expect.anything(),
+        hashedPassword: expect.any(String),
+        updatedAt: expect.any(Date),
+        createdAt: expect.any(Date),
       },
     ]);
   });
@@ -272,8 +271,8 @@ describe('UsersController#update', () => {
     expect(response.body).toEqual({
       userId: user2.userId,
       email: updateEmail,
-      updatedAt: expect.anything(),
-      createdAt: expect.anything(),
+      updatedAt: expect.any(String),
+      createdAt: expect.any(String),
     });
 
     // 作成日時と更新日時が異なること
@@ -373,8 +372,8 @@ describe('UsersController#delete', () => {
     expect(response.body).toEqual({
       userId: user2.userId,
       email: user2.email,
-      updatedAt: expect.anything(),
-      createdAt: expect.anything(),
+      updatedAt: expect.any(String),
+      createdAt: expect.any(String),
     });
   });
 
@@ -409,14 +408,8 @@ describe('UsersController#delete', () => {
 describe('UsersController#changePassword', () => {
   it('正常', async () => {
     // Arrange
-    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
     const oldPassword = 'aA1*12345';
-    const user = await userService.create(
-      new CreateUserDto({
-        email: 'test@exmaple.com',
-        password: oldPassword,
-      }),
-    );
+    const user = await tester.createTestUser({ password: oldPassword });
 
     // パスワード変更前のuserAuthを比較用に保持
     const oldUserAuth = await prisma.userAuth.findUniqueOrThrow({
@@ -470,14 +463,8 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: oldPasswordが一致しない', async () => {
     // Arrange
-    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
     const oldPassword = 'aA1*12345';
-    const user = await userService.create(
-      new CreateUserDto({
-        email: 'test@exmaple.com',
-        password: oldPassword,
-      }),
-    );
+    const user = await tester.createTestUser({ password: oldPassword });
 
     const newPassword = 'Aa1**********';
 
@@ -500,14 +487,8 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: oldPasswordなし', async () => {
     // Arrange
-    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
     const oldPassword = 'aA1*12345';
-    const user = await userService.create(
-      new CreateUserDto({
-        email: 'test@exmaple.com',
-        password: oldPassword,
-      }),
-    );
+    const user = await tester.createTestUser({ password: oldPassword });
 
     const newPassword = 'Aa1**********';
 
@@ -530,14 +511,8 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: newPasswordなし', async () => {
     // Arrange
-    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
     const oldPassword = 'aA1*12345';
-    const user = await userService.create(
-      new CreateUserDto({
-        email: 'test@exmaple.com',
-        password: oldPassword,
-      }),
-    );
+    const user = await tester.createTestUser({ password: oldPassword });
 
     // Act
     const response = await request(app.getHttpServer())
@@ -561,14 +536,8 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: newPasswordの強度が足りない', async () => {
     // Arrange
-    // パスワードとして正しいものにしたいので、サービス経由でユーザ作成を行う
     const oldPassword = 'aA1*12345';
-    const user = await userService.create(
-      new CreateUserDto({
-        email: 'test@exmaple.com',
-        password: oldPassword,
-      }),
-    );
+    const user = await tester.createTestUser({ password: oldPassword });
 
     // 半角英字が無い
     const newPassword = 'A1*1234567';
