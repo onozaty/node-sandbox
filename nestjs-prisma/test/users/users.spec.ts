@@ -36,16 +36,19 @@ beforeEach(async () => {
 describe('UsersController#findAll', () => {
   it('複数件', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const user1 = await userFactory.create();
     const user2 = await userFactory.create();
 
     // Act
-    const response = await request(app.getHttpServer()).get('/users');
+    const response = await request(app.getHttpServer())
+      .get('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.OK);
     expect(response.body).toEqual(
-      [user1, user2].map((user) => {
+      [operator, user1, user2].map((user) => {
         return {
           userId: user.userId,
           email: user.email,
@@ -58,26 +61,20 @@ describe('UsersController#findAll', () => {
     );
   });
 
-  it('0件', async () => {
-    // Act
-    const response = await request(app.getHttpServer()).get('/users');
-
-    // Assert
-    expect(response.statusCode).toBe(HttpStatus.OK);
-    expect(response.body).toEqual([]);
-  });
+  // 認証するためにユーザは1つは必要なので0件はできない
 });
 
 describe('UsersController#find', () => {
   it('正常', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     await userFactory.create();
     const user2 = await userFactory.create();
 
     // Act
-    const response = await request(app.getHttpServer()).get(
-      `/users/${user2.userId}`,
-    );
+    const response = await request(app.getHttpServer())
+      .get(`/users/${user2.userId}`)
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.OK);
@@ -92,8 +89,13 @@ describe('UsersController#find', () => {
   });
 
   it('無し', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
-    const response = await request(app.getHttpServer()).get('/users/1');
+    const response = await request(app.getHttpServer())
+      .get('/users/2')
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
@@ -107,19 +109,23 @@ describe('UsersController#find', () => {
 describe('UsersController#create', () => {
   it('正常', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const email = 'user@example.com';
     const password = 'aA1*12345';
 
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({
-      email: email,
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: email,
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.CREATED);
     expect(response.body).toEqual({
-      userId: 1,
+      userId: 2, // operatorがuserId:1
       email: email,
       updatedAt: expect.any(String),
       createdAt: expect.any(String),
@@ -129,7 +135,13 @@ describe('UsersController#create', () => {
     const users = await prisma.user.findMany();
     expect(users).toEqual([
       {
-        userId: 1,
+        userId: operator.userId,
+        email: operator.email,
+        updatedAt: expect.any(Date),
+        createdAt: expect.any(Date),
+      },
+      {
+        userId: 2,
         email: email,
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
@@ -139,7 +151,13 @@ describe('UsersController#create', () => {
     const userAuths = await prisma.userAuth.findMany();
     expect(userAuths).toEqual([
       {
-        userId: 1,
+        userId: operator.userId,
+        hashedPassword: expect.any(String),
+        updatedAt: expect.any(Date),
+        createdAt: expect.any(Date),
+      },
+      {
+        userId: 2,
         hashedPassword: expect.any(String),
         updatedAt: expect.any(Date),
         createdAt: expect.any(Date),
@@ -149,16 +167,20 @@ describe('UsersController#create', () => {
 
   it('Conflict', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const email = 'user@example.com';
     const password = 'aA1*12345';
     await userFactory.create({ email: email });
 
     // Act
     // 既に作成済みのユーザのemailを指定
-    const response = await request(app.getHttpServer()).post('/users').send({
-      email: email,
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: email,
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.CONFLICT);
@@ -170,12 +192,16 @@ describe('UsersController#create', () => {
 
   it('Bad Request: email指定なし', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const password = 'aA1*12345';
 
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -188,15 +214,19 @@ describe('UsersController#create', () => {
 
   it('Bad Request: emailではない', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     // メールとしておかしい形式
     const email = 'xxxxx';
     const password = 'aA1*12345';
 
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({
-      email: email,
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: email,
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -209,14 +239,18 @@ describe('UsersController#create', () => {
 
   it('Bad Request: password指定なし', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const email = 'user@example.com';
     const password = '';
 
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({
-      email: email,
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: email,
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -232,15 +266,19 @@ describe('UsersController#create', () => {
 
   it('Bad Request: passwordの強度が足りない', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const email = 'user@example.com';
     // パスワードで記号無し
     const password = 'aA1x12345';
 
     // Act
-    const response = await request(app.getHttpServer()).post('/users').send({
-      email: email,
-      password: password,
-    });
+    const response = await request(app.getHttpServer())
+      .post('/users')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: email,
+        password: password,
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -255,6 +293,7 @@ describe('UsersController#create', () => {
 describe('UsersController#update', () => {
   it('正常', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     await userFactory.create();
     const user2 = await userFactory.create();
     const updateEmail = 'updated@example.com';
@@ -262,6 +301,7 @@ describe('UsersController#update', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user2.userId}`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         email: updateEmail,
       });
@@ -280,11 +320,17 @@ describe('UsersController#update', () => {
   });
 
   it('Not Found', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // 存在しないユーザ
-    const response = await request(app.getHttpServer()).put('/users/1').send({
-      email: 'test@example.com',
-    });
+    const response = await request(app.getHttpServer())
+      .put('/users/2')
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: 'test@example.com',
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
@@ -296,6 +342,7 @@ describe('UsersController#update', () => {
 
   it('Bad Request: email指定なし', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     await userFactory.create();
     const user2 = await userFactory.create();
     const updateEmail = '';
@@ -303,6 +350,7 @@ describe('UsersController#update', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user2.userId}`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         email: updateEmail,
       });
@@ -318,6 +366,7 @@ describe('UsersController#update', () => {
 
   it('Bad Request: emailではない', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     await userFactory.create();
     const user2 = await userFactory.create();
     // メールとしておかしい形式
@@ -326,6 +375,7 @@ describe('UsersController#update', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user2.userId}`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         email: updateEmail,
       });
@@ -340,11 +390,17 @@ describe('UsersController#update', () => {
   });
 
   it('Bad Request: idが数値ではない', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // idに数値以外
-    const response = await request(app.getHttpServer()).put(`/users/xx`).send({
-      email: 'a@example.com',
-    });
+    const response = await request(app.getHttpServer())
+      .put(`/users/xx`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
+      .send({
+        email: 'a@example.com',
+      });
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -359,13 +415,14 @@ describe('UsersController#update', () => {
 describe('UsersController#delete', () => {
   it('正常', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     await userFactory.create();
     const user2 = await userFactory.create();
 
     // Act
-    const response = await request(app.getHttpServer()).delete(
-      `/users/${user2.userId}`,
-    );
+    const response = await request(app.getHttpServer())
+      .delete(`/users/${user2.userId}`)
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.OK);
@@ -378,9 +435,14 @@ describe('UsersController#delete', () => {
   });
 
   it('Not Found', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // 存在しないユーザ
-    const response = await request(app.getHttpServer()).delete('/users/1');
+    const response = await request(app.getHttpServer())
+      .delete('/users/2')
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.NOT_FOUND);
@@ -391,9 +453,14 @@ describe('UsersController#delete', () => {
   });
 
   it('Bad Request: idが数値ではない', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // idに数値以外
-    const response = await request(app.getHttpServer()).delete('/users/x');
+    const response = await request(app.getHttpServer())
+      .delete('/users/x')
+      .set('Authorization', `Bearer ${operator.accessToken}`);
 
     // Assert
     expect(response.statusCode).toBe(HttpStatus.BAD_REQUEST);
@@ -408,6 +475,7 @@ describe('UsersController#delete', () => {
 describe('UsersController#changePassword', () => {
   it('正常', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const oldPassword = 'aA1*12345';
     const user = await tester.createTestUser({ password: oldPassword });
 
@@ -423,6 +491,7 @@ describe('UsersController#changePassword', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user.userId}/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: oldPassword,
         newPassword: newPassword,
@@ -444,10 +513,14 @@ describe('UsersController#changePassword', () => {
   });
 
   it('Not Found', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // 存在しないユーザ
     const response = await request(app.getHttpServer())
-      .put(`/users/1/password`)
+      .put(`/users/2/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: 'aA1*12345',
         newPassword: 'aA1*12345',
@@ -463,6 +536,7 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: oldPasswordが一致しない', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const oldPassword = 'aA1*12345';
     const user = await tester.createTestUser({ password: oldPassword });
 
@@ -471,6 +545,7 @@ describe('UsersController#changePassword', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user.userId}/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: oldPassword + 'xxx', // oldPasswordとして間違ったものを指定
         newPassword: newPassword,
@@ -487,6 +562,7 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: oldPasswordなし', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const oldPassword = 'aA1*12345';
     const user = await tester.createTestUser({ password: oldPassword });
 
@@ -495,6 +571,7 @@ describe('UsersController#changePassword', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user.userId}/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: '', // oldPasswordが空
         newPassword: newPassword,
@@ -511,12 +588,14 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: newPasswordなし', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const oldPassword = 'aA1*12345';
     const user = await tester.createTestUser({ password: oldPassword });
 
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user.userId}/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: oldPassword,
         // nedPasswordなし
@@ -536,6 +615,7 @@ describe('UsersController#changePassword', () => {
 
   it('Bad Request: newPasswordの強度が足りない', async () => {
     // Arrange
+    const operator = await tester.createTestUser({});
     const oldPassword = 'aA1*12345';
     const user = await tester.createTestUser({ password: oldPassword });
 
@@ -545,6 +625,7 @@ describe('UsersController#changePassword', () => {
     // Act
     const response = await request(app.getHttpServer())
       .put(`/users/${user.userId}/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: oldPassword,
         newPassword: newPassword,
@@ -560,10 +641,14 @@ describe('UsersController#changePassword', () => {
   });
 
   it('Bad Request: idが数値ではない', async () => {
+    // Arrange
+    const operator = await tester.createTestUser({});
+
     // Act
     // idに数値以外
     const response = await request(app.getHttpServer())
       .put(`/users/xx/password`)
+      .set('Authorization', `Bearer ${operator.accessToken}`)
       .send({
         oldPassword: 'aA1*12345',
         newPassword: 'aA1*12345',
