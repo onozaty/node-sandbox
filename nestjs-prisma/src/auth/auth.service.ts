@@ -1,10 +1,12 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import { TokenDto } from './dto/token.dto';
+import { JwtPayload, createJwtPayload } from './jwt-payload';
 
 @Injectable()
 export class AuthService {
@@ -42,7 +44,7 @@ export class AuthService {
       throw new UnauthorizedException();
     }
 
-    const payload = { sub: user.userId, username: user.email };
+    const payload = createJwtPayload(user);
     return {
       accessToken: await this.jwtService.signAsync(payload, {
         secret: this.config.get<string>('ACCESS_TOKEN_SECRET'),
@@ -53,5 +55,16 @@ export class AuthService {
         expiresIn: this.config.get<string>('REFRESH_TOKEN_EXPIRES_IN'),
       }),
     };
+  }
+
+  async validateUser(payload: JwtPayload): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        userId: payload.sub,
+        email: payload.username,
+      },
+    });
+
+    return user;
   }
 }

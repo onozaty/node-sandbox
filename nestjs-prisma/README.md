@@ -31,5 +31,7 @@
   * [Authentication \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/security/authentication)
   * ハッシュ化
     * [Encryption and Hashing \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/security/encryption-and-hashing)
+  * Passport
+    * [Authentication \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/recipes/passport)
 * 設定
   * [Configuration \| NestJS \- A progressive Node\.js framework](https://docs.nestjs.com/techniques/configuration#schema-validation)
