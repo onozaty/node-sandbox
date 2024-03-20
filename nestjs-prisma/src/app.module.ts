@@ -1,6 +1,10 @@
-import { Module, ValidationPipe } from '@nestjs/common';
+import {
+  ClassSerializerInterceptor,
+  Module,
+  ValidationPipe,
+} from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD, APP_PIPE } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR, APP_PIPE, Reflector } from '@nestjs/core';
 import * as Joi from 'joi';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
@@ -22,6 +26,16 @@ import { UsersModule } from './users/users.module';
     }),
   ],
   providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      inject: [Reflector],
+      useFactory: (reflector: Reflector) => {
+        return new ClassSerializerInterceptor(reflector, {
+          // Expose の指定があるものに絞る
+          excludeExtraneousValues: true,
+        });
+      },
+    },
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

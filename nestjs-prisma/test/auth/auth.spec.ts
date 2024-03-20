@@ -89,4 +89,24 @@ describe('AuthController#login', () => {
     // Assert
     expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
   });
+
+  describe('AuthController#getProfile', () => {
+    it('プロフィール取得', async () => {
+      // Arrange
+      const email = 'test@example.com';
+      const operator = await tester.createTestUser({ email });
+
+      // Act
+      const response = await request(app.getHttpServer())
+        .get('/auth/profile')
+        .set('Authorization', `Bearer ${operator.accessToken}`);
+
+      // Assert
+      expect(response.statusCode).toBe(HttpStatus.OK);
+      expect(response.body).toEqual({
+        userId: operator.userId,
+        email: email,
+      });
+    });
+  });
 });

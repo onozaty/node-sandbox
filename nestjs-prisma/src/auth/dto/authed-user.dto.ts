@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 
-export class UserDto {
+export class AuthedUserDto {
   /**
    * ユーザID
    * @example 1
@@ -15,19 +15,7 @@ export class UserDto {
   @Expose()
   email: string;
 
-  /**
-   * 作成日時
-   */
-  @Expose()
-  createdAt: Date;
-
-  /**
-   * 更新日時
-   */
-  @Expose()
-  updatedAt: Date;
-
-  constructor(partial: Partial<UserDto>) {
+  constructor(partial: Partial<AuthedUserDto>) {
     Object.assign(this, partial);
   }
 }
