@@ -108,5 +108,23 @@ describe('AuthController#login', () => {
         email: email,
       });
     });
+
+    it('認証失敗(トークンの形式異常)', async () => {
+      // Act
+      const response = await request(app.getHttpServer())
+        .get('/auth/profile')
+        .set('Authorization', `Bearer xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`);
+
+      // Assert
+      expect(response.statusCode).toBe(HttpStatus.UNAUTHORIZED);
+      expect(response.body).toEqual({
+        message: 'Unauthorized',
+        statusCode: 401,
+      });
+    });
+
+    // TODO
+    // ・ユーザが存在しない
+    // ・トークンの有効期限切れ
   });
 });

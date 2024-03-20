@@ -45,7 +45,7 @@ export class AuthService {
     }
 
     const payload = createJwtPayload(user);
-    return {
+    return new TokenDto({
       accessToken: await this.jwtService.signAsync(payload, {
         secret: this.config.get<string>('ACCESS_TOKEN_SECRET'),
         expiresIn: this.config.get<string>('ACCESS_TOKEN_EXPIRES_IN'),
@@ -54,7 +54,7 @@ export class AuthService {
         secret: this.config.get<string>('REFRESH_TOKEN_SECRET'),
         expiresIn: this.config.get<string>('REFRESH_TOKEN_EXPIRES_IN'),
       }),
-    };
+    });
   }
 
   async validateUser(payload: JwtPayload): Promise<User> {

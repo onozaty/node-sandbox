@@ -14,4 +14,8 @@ export class TokenDto {
    */
   @Expose()
   refreshToken: string;
+
+  constructor(partial: Partial<TokenDto>) {
+    Object.assign(this, partial);
+  }
 }
