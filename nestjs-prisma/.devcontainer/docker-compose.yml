@@ -8,6 +8,7 @@ services:
 
     volumes:
       - ..:/workspaces/app:cached
+      - app-node-modules:/workspaces/app/node_modules
       
     command: sleep infinity
 
@@ -26,3 +27,4 @@ services:
 
 volumes:
   postgres-data:
+  app-node-modules:
