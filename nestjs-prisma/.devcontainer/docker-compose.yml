@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
 
     volumes:
-      - ../..:/workspaces:cached
+      - ..:/workspaces/app:cached
       
     command: sleep infinity
 

@@ -2,7 +2,7 @@
     "name": "Node.js & PostgreSQL",
     "dockerComposeFile": "docker-compose.yml",
     "service": "app",
-    "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
+    "workspaceFolder": "/workspaces/app",
     "customizations": {
         "vscode": {
             "settings": {
@@ -28,7 +28,5 @@
                 "Prisma.prisma"
             ]
         }
-    },
-    "remoteUser": "node",
-    "updateRemoteUserUID": true
+    }
 }
