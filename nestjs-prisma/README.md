@@ -1,3 +1,7 @@
+下記に移動済み。
+
+* https://github.com/onozaty/nestjs-prisma
+
 ## TODO
 
 * [x] DevContainerの設定
