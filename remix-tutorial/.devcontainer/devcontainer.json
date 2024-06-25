@@ -6,9 +6,9 @@
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 
 	"mounts": [
-    	"source=${localWorkspaceFolderBasename}-my-remix-app-node_modules,target=${containerWorkspaceFolder}/my-remix-app/node_modules,type=volume"
+    	"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
 	],
-	"postCreateCommand": "sudo chown node my-remix-app/node_modules"
+	"postCreateCommand": "sudo chown node node_modules"
 
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
