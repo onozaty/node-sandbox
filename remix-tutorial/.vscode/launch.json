@@ -15,6 +15,18 @@
             "url": "http://localhost:5173/",
             "webRoot": "${workspaceFolder}/app",
             "sourceMaps": true
-        }
+        },
+        {
+            "name": "Debug Backend and Frontend",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "npm run dev",
+            "cwd": "${workspaceFolder}",
+            "serverReadyAction": {
+                "action": "startDebugging",
+                "pattern": "Local: +https?://.+",
+                "name": "Debug Frontend"
+            }
+        },
     ]
 }
