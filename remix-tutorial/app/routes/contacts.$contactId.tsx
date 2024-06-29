@@ -1,7 +1,7 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Form, useFetcher, useLoaderData } from "@remix-run/react";
-import { useEffect, type FunctionComponent } from "react";
+import type { FunctionComponent } from "react";
 
 import type { ContactRecord } from "../data";
 import { getContact, updateContact } from "../data";
