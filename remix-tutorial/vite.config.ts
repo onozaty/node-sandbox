@@ -9,4 +9,8 @@ export default defineConfig({
     }),
     tsconfigPaths(),
   ],
+  // https://github.com/docker/for-mac/issues/7276#issuecomment-2166725643
+  server: {
+    host: '127.0.0.1'
+  },
 });
