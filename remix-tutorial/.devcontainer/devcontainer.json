@@ -6,7 +6,8 @@
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
 	"containerEnv": {
 		"HTTP_PROXY": "${localEnv:http_proxy}",
-		"HTTPS_PROXY": "${localEnv:https_proxy}"
+		"HTTPS_PROXY": "${localEnv:https_proxy}",
+		"NO_PROXY": "${localEnv:no_proxy}"
 	},
 	"mounts": [
 		"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
