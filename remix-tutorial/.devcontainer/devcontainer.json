@@ -4,9 +4,12 @@
 	"name": "Node.js & TypeScript",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
-
+	"containerEnv": {
+		"HTTP_PROXY": "${localEnv:http_proxy}",
+		"HTTPS_PROXY": "${localEnv:https_proxy}"
+	},
 	"mounts": [
-    	"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
+		"source=${localWorkspaceFolderBasename}-node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume"
 	],
 	"postCreateCommand": "sudo chown node node_modules"
 
