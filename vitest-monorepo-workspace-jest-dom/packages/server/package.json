@@ -9,11 +9,9 @@
   "devDependencies": {
     "@types/node": "^22.5.5",
     "@types/supertest": "^6.0.2",
-    "@vitest/ui": "latest",
     "fastify": "^4.26.2",
     "supertest": "^6.3.4",
     "tsx": "^4.7.2",
-    "vite": "latest",
-    "vitest": "latest"
+    "vite": "latest"
   }
 }
