@@ -1,0 +1,4 @@
+{
+	"name": "Node",
+	"image": "node:22-slim"
+}
